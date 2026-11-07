@@ -120,6 +120,18 @@ SECTIONS
 
 	_sidata = LOADADDR(.data);
 
+	.axi_sram (NOLOAD) :
+	{
+		. = ALIGN(32);
+		_saxi_sram = .;
+		PROVIDE(__axi_sram_start__ = _saxi_sram);
+		*(.axi_sram)
+		*(.axi_sram*)
+		. = ALIGN(32);
+		_eaxi_sram = .;
+		PROVIDE(__axi_sram_end__ = _eaxi_sram);
+	} > SRAM
+
 	.bss (NOLOAD) :
 	{
 		. = ALIGN(4);

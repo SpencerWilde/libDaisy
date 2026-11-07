@@ -25,6 +25,14 @@
 #include "usbd_def.h"
 #include "usbd_core.h"
 
+/* Emerald fork marker (github.com/SpencerWilde/libDaisy, branch emerald).
+ * This fork raises USBD_MAX_NUM_INTERFACES for Emerald's 5-interface USB
+ * composite (audio + serial) and adds an .axi_sram section to
+ * core/STM32H750IB_sram.lds. Emerald's firmware links against this symbol,
+ * so a build with stock or stale libDaisy fails to link instead of making
+ * firmware whose USB never starts (Windows error code 10). */
+const unsigned int libdaisy_emerald_patch_level = 1u;
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
