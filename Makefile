@@ -71,7 +71,9 @@ util/WaveTableLoader \
 # building variables
 ######################################
 DEBUG = 0
-OPT = -O3
+# Emerald: built for size. With BOOT_SRAM all code shares 480 KB of AXI SRAM.
+# The audio and USB-audio interrupt path stays at -O3: see SPEED_OPT_SOURCES.
+OPT = -Os
 
 #######################################
 # paths
@@ -366,6 +368,30 @@ vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 # Prunes duplicates, and orders lexically (for archive build)
 SORTED_OBJECTS = $(sort $(OBJECTS))
+
+# Emerald: OPT is -Os above, to save code space (18 KB measured 2026-11-18).
+# These run in the audio and USB-audio interrupts on every block or USB
+# frame, so they keep -O3: the SAI audio DMA callback and its sample
+# conversion, DMA and SAI interrupt handling, and the USB device stack.
+SPEED_OPT_SOURCES = \
+src/hid/audio.cpp \
+src/per/sai.cpp \
+src/sys/dma.c \
+src/usbd/usbd_conf.c \
+Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c \
+Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c \
+Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sai.c \
+Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sai_ex.c \
+Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd.c \
+Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd_ex.c \
+Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c \
+Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
+Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
+Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
+SPEED_OPT_OBJECTS = $(addprefix $(BUILD_DIR)/,$(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(SPEED_OPT_SOURCES))))
+ifneq ($(DEBUG), 1)
+$(SPEED_OPT_OBJECTS): OPT = -O3
+endif
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	mkdir -p $(@D)
